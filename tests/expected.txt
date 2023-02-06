@@ -1,0 +1,18 @@
+File '/share/data.txt':
+Data file.
+
+File 'fixwork.txt':
+Fixture in dir1/dir2/workdir/.
+
+File '../fixdir2.txt':
+Fixture in dir1/dir2/.
+
+File '../../fixdir1.txt':
+Fixture in dir1/.
+
+File 'dir3/fixdir3.txt':
+Fixture in dir1/dir2/workdir/dir3/.
+
+File 'notfound.txt':
+fopen: No such file or directory
+

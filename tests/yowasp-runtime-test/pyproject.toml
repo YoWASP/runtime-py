@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools~=67.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yowasp-runtime-test"
+version = "0"
+dependencies = [
+	"yowasp-runtime~=1.0"
+]
+
+[project.scripts]
+yowasp-runtime-test-cat = "yowasp_runtime_test:_run_cat"
+
+[tool.setuptools.package-data]
+yowasp_runtime_test = ["*.wasm", "share/*"]
