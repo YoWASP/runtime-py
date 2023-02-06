@@ -1,0 +1,32 @@
+on:
+  schedule:
+    - cron: '0 0 * * *'
+name: Track wasmtime releases
+jobs:
+  track_wasmtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PUSH_TOKEN }}
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Check for a new release and update version requirement
+        id: track-version
+        run: |
+          pip install git+https://github.com/whitequark/track-pypi-dependency-version.git
+          track-pypi-dependency-version --status $GITHUB_OUTPUT -r dependencies.txt wasmtime
+      - name: Test against updated version requirement
+        if: steps.track-version.outputs.status == 'stale'
+        run: |
+          ./tests/run.sh
+      - name: Push updated version requirement
+        if: steps.track-version.outputs.status == 'stale'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: |
+            [autorelease] Update wasmtime version requirement from ${{ steps.track-version.outputs.old-requirement }} to ${{ steps.track-version.outputs.new-requirement }}.

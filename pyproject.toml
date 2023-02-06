@@ -3,7 +3,7 @@ requires = ["setuptools~=67.0", "setuptools_scm~=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 
 name = "yowasp-runtime"
 description = "Common runtime for YoWASP packages"
@@ -14,13 +14,10 @@ classifiers = [
 	"License :: OSI Approved :: ISC License (ISCL)"
 ]
 
-dependencies = [
-	"importlib_resources; python_version<'3.9'",
-	"appdirs~=1.4",
-	"wasmtime>=1.0,<2"
-]
-
 [project.urls]
 "Homepage" = "https://yowasp.org/"
 "Source Code" = "https://github.com/YoWASP/runtime"
 "Bug Tracker" = "https://github.com/YoWASP/runtime/issues"
+
+[tool.setuptools.dynamic]
+dependencies = {file = "dependencies.txt"}
