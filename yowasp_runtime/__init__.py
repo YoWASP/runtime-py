@@ -11,7 +11,7 @@ except (ImportError, AttributeError):
     import importlib_resources
 
 
-def run_wasm(__package__, wasm_filename, *, resources, argv):
+def run_wasm(__package__, wasm_filename, *, resources=[], argv):
     # load the WebAssembly application
     module_binary = importlib_resources.read_binary(__package__, wasm_filename)
     module_digest = hashlib.sha1(module_binary).hexdigest()
