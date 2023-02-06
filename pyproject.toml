@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools~=67.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yowasp-runtime"
+version = "1.0"
+description = "Common runtime for YoWASP packages"
+readme = "README.md"
+authors = [{name = "Catherine", email = "whitequark@whitequark.org"}]
+license = {file = "LICENSE.txt"}
+classifiers = [
+	"License :: OSI Approved :: ISC License (ISCL)"
+]
+
+dependencies = [
+	"importlib_resources; python_version<'3.9'",
+	"appdirs~=1.4",
+	"wasmtime>=1.0,<2"
+]
+
+[project.urls]
+"Homepage" = "https://yowasp.org/"
+"Source Code" = "https://github.com/YoWASP/runtime"
+"Bug Tracker" = "https://github.com/YoWASP/runtime/issues"
