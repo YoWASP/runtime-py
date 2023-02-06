@@ -51,9 +51,13 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
 
     # compile WebAssembly to machine code, or load cached
     engine = wasmtime.Engine()
+    module = None
     if cache_filename.exists():
-        module = wasmtime.Module.deserialize_file(engine, str(cache_filename))
-    else:
+        try:
+            module = wasmtime.Module.deserialize_file(engine, str(cache_filename))
+        except wasmtime.WasmtimeError:
+            pass
+    if module is None:
         print("Preparing to run {}. This might take a while...".format(argv[0]), file=sys.stderr)
         module = wasmtime.Module(engine, module_binary)
         cache_filename.parent.mkdir(parents=True, exist_ok=True)
