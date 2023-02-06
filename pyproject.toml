@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools~=67.0"]
+requires = ["setuptools~=67.0", "setuptools_scm~=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
+dynamic = ["version"]
+
 name = "yowasp-runtime"
-version = "1.1"
 description = "Common runtime for YoWASP packages"
 readme = "README.md"
 authors = [{name = "Catherine", email = "whitequark@whitequark.org"}]

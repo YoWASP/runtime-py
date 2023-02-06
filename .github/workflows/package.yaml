@@ -6,6 +6,8 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -13,3 +15,46 @@ jobs:
       - name: Run tests
         run: |
           ./tests/run.sh
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out source code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        pip install build
+    - name: Build wheel
+      run: |
+        python -m build -w
+    - name: Publish wheel to Test PyPI
+      if: github.event_name == 'push' && github.event.ref == 'refs/heads/develop'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+    - name: Publish wheel to PyPI
+      if: github.event_name == 'push' && github.event.ref == 'refs/heads/release'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_TOKEN }}
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    if: "contains(github.event.head_commit.message, 'autorelease') && github.event_name == 'push' && github.ref == 'refs/heads/develop'"
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PUSH_TOKEN }}
+      - name: Update release branch
+        run: |
+          git push origin develop:release
