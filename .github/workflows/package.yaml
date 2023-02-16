@@ -55,6 +55,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.PUSH_TOKEN }}
+          fetch-depth: 0 # fetch the release branch as well
       - name: Update release branch
         run: |
           git push origin develop:release
