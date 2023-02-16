@@ -1,0 +1,6 @@
+File '/mount/fixtarget.txt':
+Fixture in target/.
+
+File 'fixwork.txt':
+fopen: Capabilities insufficient
+

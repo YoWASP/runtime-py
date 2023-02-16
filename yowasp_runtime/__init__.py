@@ -26,27 +26,53 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
     # use provided argv
     wasi_cfg.argv = argv
 
-    # preopens for package resources
+    if "YOWASP_MOUNT" in os.environ:
+        # preopens for explicitly specified paths; if YOWASP_MOUNT is specified, the YoWASP
+        # runtime can be used as a security boundary (subject to your confidence in wasmtime)
+        for mount_entry in os.environ["YOWASP_MOUNT"].split(":"):
+            if mount_entry.count("=") < 1:
+                print("Invalid entry {!r} in YOWASP_MOUNT environment variable: "
+                      "must be separated by '='"
+                      .format(mount_entry), file=sys.stderr)
+                return 64 # BSD sysexits(3) EX_USAGE
+
+            mountpoint, target = mount_entry.split("=", 1)
+            if not os.path.isdir(target):
+                print("Invalid entry {!r} in YOWASP_MOUNT environment variable: "
+                      "OS path {!r} must exist and be a directory"
+                      .format(mount_entry, target), file=sys.stderr)
+                return 64 # BSD sysexits(3) EX_USAGE
+            if not mountpoint.startswith("/"):
+                print("Invalid entry {!r} in YOWASP_MOUNT environment variable: "
+                      "mountpoint {!r} must be an absolute path"
+                      .format(mount_entry, mountpoint), file=sys.stderr)
+                return 64 # BSD sysexits(3) EX_USAGE
+
+            wasi_cfg.preopen_dir(target, mountpoint)
+
+    else:
+        # preopens for absolute paths
+        if os.name == "nt":
+            for letter in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                wasi_cfg.preopen_dir(letter + ":\\", letter + ":")
+        else:
+            wasi_cfg.preopen_dir("/", "/")
+
+        # preopens for relative paths
+        wasi_cfg.preopen_dir(".", ".")
+        for level in range(len(pathlib.Path().cwd().parts)):
+            wasi_cfg.preopen_dir(str(pathlib.Path("").joinpath(*[".."] * level)),
+                                 "/".join([".."] * level))
+
+    # preopens for package resources; these are necessary for package functionality
+    # and take priority over implicit or explicit OS mounts
     for resource in resources:
         wasi_cfg.preopen_dir(str(importlib_resources.files(__package__) / resource), 
                              "/" + resource)
 
-    # preopens for absolute paths
-    if os.name == "nt":
-        for letter in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
-            wasi_cfg.preopen_dir(letter + ":\\", letter + ":")
-    else:
-        wasi_cfg.preopen_dir("/", "/")
-
-    # preopens for relative paths
-    wasi_cfg.preopen_dir(".", ".")
-    for level in range(len(pathlib.Path().cwd().parts)):
-        wasi_cfg.preopen_dir(str(pathlib.Path("").joinpath(*[".."] * level)),
-                             "/".join([".."] * level))
-
     # compute path to cache
     default_cache_path = appdirs.user_cache_dir("YoWASP", appauthor=False)
-    cache_path = pathlib.Path(os.getenv("YOWASP_CACHE_DIR", default_cache_path))
+    cache_path = pathlib.Path(os.environ.get("YOWASP_CACHE_DIR", default_cache_path))
     cache_filename = (cache_path / __package__ / wasm_filename / module_digest)
 
     # compile WebAssembly to machine code, or load cached
@@ -58,7 +84,8 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
         except wasmtime.WasmtimeError:
             pass
     if module is None:
-        print("Preparing to run {}. This might take a while...".format(argv[0]), file=sys.stderr)
+        print("Preparing to run {}. This might take a while..."
+              .format(argv[0]), file=sys.stderr)
         module = wasmtime.Module(engine, module_binary)
         cache_filename.parent.mkdir(parents=True, exist_ok=True)
         with cache_filename.open("wb") as cache_file:
