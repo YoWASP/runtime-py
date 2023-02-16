@@ -1,5 +1,7 @@
 import os
 import sys
+import shutil
+import tempfile
 import wasmtime
 import pathlib
 import hashlib
@@ -69,37 +71,48 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
     for resource in resources:
         wasi_cfg.preopen_dir(str(importlib_resources.files(__package__) / resource), 
                              "/" + resource)
+    
+    # preopen for temporary directory; this is necessary for package functionality
+    # and takes priority over implicit or explicit OS mounts
+    temp_dirname = tempfile.mkdtemp(prefix="yowasp_")
+    wasi_cfg.preopen_dir(temp_dirname, "/tmp")
 
-    # compute path to cache
-    default_cache_path = appdirs.user_cache_dir("YoWASP", appauthor=False)
-    cache_path = pathlib.Path(os.environ.get("YOWASP_CACHE_DIR", default_cache_path))
-    cache_filename = (cache_path / __package__ / wasm_filename / module_digest)
-
-    # compile WebAssembly to machine code, or load cached
-    engine = wasmtime.Engine()
-    module = None
-    if cache_filename.exists():
-        try:
-            module = wasmtime.Module.deserialize_file(engine, str(cache_filename))
-        except wasmtime.WasmtimeError:
-            pass
-    if module is None:
-        print("Preparing to run {}. This might take a while..."
-              .format(argv[0]), file=sys.stderr)
-        module = wasmtime.Module(engine, module_binary)
-        cache_filename.parent.mkdir(parents=True, exist_ok=True)
-        with cache_filename.open("wb") as cache_file:
-            cache_file.write(module.serialize())
-
-    # run compiled code
-    linker = wasmtime.Linker(engine)
-    linker.define_wasi()
-    store = wasmtime.Store(engine)
-    store.set_wasi(wasi_cfg)
-    app = linker.instantiate(store, module)
-    linker.define_instance(store, "app", app)
     try:
-        app.exports(store)["_start"](store)
-        return 0
-    except wasmtime.ExitTrap as trap:
-        return trap.code
+        # compute path to cache
+        default_cache_path = appdirs.user_cache_dir("YoWASP", appauthor=False)
+        cache_path = pathlib.Path(os.environ.get("YOWASP_CACHE_DIR", default_cache_path))
+        cache_filename = (cache_path / __package__ / wasm_filename / module_digest)
+
+        # compile WebAssembly to machine code, or load cached
+        engine = wasmtime.Engine()
+        module = None
+        if cache_filename.exists():
+            try:
+                module = wasmtime.Module.deserialize_file(engine, str(cache_filename))
+            except wasmtime.WasmtimeError:
+                pass
+        if module is None:
+            print("Preparing to run {}. This might take a while..."
+                  .format(argv[0]), file=sys.stderr)
+            module = wasmtime.Module(engine, module_binary)
+            cache_filename.parent.mkdir(parents=True, exist_ok=True)
+            with cache_filename.open("wb") as cache_file:
+                cache_file.write(module.serialize())
+
+        # run compiled code
+        linker = wasmtime.Linker(engine)
+        linker.define_wasi()
+        store = wasmtime.Store(engine)
+        store.set_wasi(wasi_cfg)
+        app = linker.instantiate(store, module)
+        linker.define_instance(store, "app", app)
+        try:
+            app.exports(store)["_start"](store)
+            return 0
+        except wasmtime.ExitTrap as trap:
+            return trap.code
+
+    finally:
+        # clean up temporary directory; on Windows this can cause errors in certain cases
+        # and there isn't a solution much better than just ignoring them
+        shutil.rmtree(temp_dirname, ignore_errors=True)
