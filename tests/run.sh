@@ -3,6 +3,8 @@
 PYTHON=${PYTHON:-python}
 cd $(dirname $0)
 
+./yowasp-runtime-test/build.sh
+
 rm -rf venv
 ${PYTHON} -m venv venv
 . venv/bin/activate

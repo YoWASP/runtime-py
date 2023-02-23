@@ -3,3 +3,6 @@ __pycache__/
 /.eggs
 /build
 /dist
+
+/wasi-sdk-*
+*.wasm
