@@ -15,8 +15,8 @@ pip install ./yowasp-runtime-test
 yowasp-runtime-test-cat # warmup
 
 # Check that relative paths above the workdir can be used.
-FIXTURES1="/share/data.txt fixwork.txt ../fixdir2.txt ../../fixdir1.txt dir3/fixdir3.txt"
-FIXTURES1="${FIXTURES1} notfound.txt"
+FIXTURES1="/share/data.txt fixwork.txt ./fixwork.txt ../fixdir2.txt ../../fixdir1.txt"
+FIXTURES1="${FIXTURES1} dir3/fixdir3.txt notfound.txt"
 (cd fixtures/test1/dir1/dir2/workdir && 
  yowasp-runtime-test-cat ${FIXTURES1} 2>&1) >output1.txt
 

@@ -4,6 +4,9 @@ Data file.
 File 'fixwork.txt':
 Fixture in dir1/dir2/workdir/.
 
+File './fixwork.txt':
+Fixture in dir1/dir2/workdir/.
+
 File '../fixdir2.txt':
 Fixture in dir1/dir2/.
 
