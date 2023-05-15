@@ -58,7 +58,10 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
             for letter in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
                 wasi_cfg.preopen_dir(letter + ":\\", letter + ":")
         else:
-            wasi_cfg.preopen_dir("/", "/")
+            # can't do this for files, but no one's going to use yowasp on files in / anyway
+            for path in os.listdir("/"):
+                if os.path.isdir("/" + path):
+                    wasi_cfg.preopen_dir("/" + path, "/" + path)
 
         # preopens for relative paths
         wasi_cfg.preopen_dir(".", ".")
