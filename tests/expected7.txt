@@ -1,0 +1,3 @@
+File 'PWD/fixtures/test7/fixwork.txt':
+Fixture at an absolute path.
+

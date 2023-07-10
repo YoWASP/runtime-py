@@ -46,9 +46,15 @@ ENVIRON6="YOWASP_MOUNT=/tmp=$(pwd)/fixtures/test6"
 FIXTURES6="/tmp/yowasp_tmp_test_file.txt"
 (env ${ENVIRON6} yowasp-runtime-test-cat ${FIXTURES6} 2>&1) >output6.txt
 
+# Check that absolute paths work (on Unix systems).
+FIXTURES7="$(pwd)/fixtures/test7/fixwork.txt"
+(yowasp-runtime-test-cat ${FIXTURES7} 2>&1) | sed "s:$(pwd):PWD:" >output7.txt
+
+set +e
 diff expected1.txt output1.txt
 diff expected2.txt output2.txt
 diff expected3.txt output3.txt
 diff expected4.txt output4.txt
 diff expected5.txt output5.txt
 diff expected6.txt output6.txt
+diff expected7.txt output7.txt
