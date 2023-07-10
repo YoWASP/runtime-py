@@ -15,7 +15,7 @@ except (ImportError, AttributeError):
 
 def run_wasm(__package__, wasm_filename, *, resources=[], argv):
     # load the WebAssembly application
-    module_binary = importlib_resources.read_binary(__package__, wasm_filename)
+    module_binary = importlib_resources.files(__package__).joinpath(wasm_filename).read_bytes()
     module_digest = hashlib.sha1(module_binary).hexdigest()
 
     wasi_cfg = wasmtime.WasiConfig()
