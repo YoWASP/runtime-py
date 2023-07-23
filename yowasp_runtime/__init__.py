@@ -128,11 +128,11 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
         thread = threading.Thread(target=run)
         thread.daemon = True
         thread.start()
-        try:
-            thread.join()
-            return exit_code
-        except KeyboardInterrupt:
-            return 128 + signal.SIGINT
+        thread.join()
+        return exit_code
+
+    except KeyboardInterrupt:
+        return 128 + signal.SIGINT
 
     finally:
         # clean up temporary directory; on Windows this can cause errors in certain cases
