@@ -6,6 +6,8 @@ import wasmtime
 import pathlib
 import hashlib
 import appdirs
+import threading
+import signal
 try:
     from importlib import resources as importlib_resources
     importlib_resources.files
@@ -102,18 +104,35 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
             with cache_filename.open("wb") as cache_file:
                 cache_file.write(module.serialize())
 
-        # run compiled code
+        # instantiate the module
         linker = wasmtime.Linker(engine)
         linker.define_wasi()
         store = wasmtime.Store(engine)
         store.set_wasi(wasi_cfg)
         app = linker.instantiate(store, module)
         linker.define_instance(store, "app", app)
+
+        # wrap Wasm function to handle traps
+        exit_code = None
+        def run():
+            nonlocal exit_code
+            try:
+                app.exports(store)["_start"](store)
+                exit_code = 0
+            except wasmtime.ExitTrap as trap:
+                exit_code = trap.code
+
+        # run the application; this needs to be done in a thread other than the main thread
+        # because signal handlers always execute on the main thread and we won't be able
+        # to process SIGINT otherwise
+        thread = threading.Thread(target=run)
+        thread.daemon = True
+        thread.start()
         try:
-            app.exports(store)["_start"](store)
-            return 0
-        except wasmtime.ExitTrap as trap:
-            return trap.code
+            thread.join()
+            return exit_code
+        except KeyboardInterrupt:
+            return 128 + signal.SIGINT
 
     finally:
         # clean up temporary directory; on Windows this can cause errors in certain cases
