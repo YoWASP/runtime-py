@@ -113,14 +113,13 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
         linker.define_instance(store, "app", app)
 
         # wrap Wasm function to handle traps
-        exit_code = None
+        exception = None
         def run():
-            nonlocal exit_code
+            nonlocal exception
             try:
                 app.exports(store)["_start"](store)
-                exit_code = 0
-            except wasmtime.ExitTrap as trap:
-                exit_code = trap.code
+            except Exception as e:
+                exception = e
 
         # run the application; this needs to be done in a thread other than the main thread
         # because signal handlers always execute on the main thread and we won't be able
@@ -129,7 +128,12 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
         thread.daemon = True
         thread.start()
         thread.join()
-        return exit_code
+        try:
+            if exception is not None:
+                raise exception # re-raise to preserve backtrace
+            return 0
+        except wasmtime.ExitTrap as trap:
+            return trap.code
 
     except KeyboardInterrupt:
         return 128 + signal.SIGINT
