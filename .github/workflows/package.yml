@@ -55,9 +55,6 @@ jobs:
     - name: Publish wheel to PyPI
       if: github.event_name == 'push' && github.event.ref == 'refs/heads/release'
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_TOKEN }}
   check: # group all `test (*)` workflows into one for the required status check
     needs: test
     runs-on: ubuntu-latest
