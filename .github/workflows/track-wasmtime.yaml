@@ -3,7 +3,7 @@ on:
     - cron: '0 0 * * *'
 name: Track wasmtime releases
 jobs:
-  track_wasmtime:
+  track-releases:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source code
