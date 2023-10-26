@@ -5,7 +5,7 @@ import tempfile
 import wasmtime
 import pathlib
 import hashlib
-import appdirs
+import platformdirs
 import threading
 import signal
 try:
@@ -76,7 +76,7 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
     for resource in resources:
         wasi_cfg.preopen_dir(str(importlib_resources.files(__package__) / resource), 
                              "/" + resource)
-    
+
     # preopen for temporary directory; this is necessary for package functionality
     # and takes priority over implicit or explicit OS mounts
     temp_dirname = tempfile.mkdtemp(prefix="yowasp_")
@@ -84,9 +84,9 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
 
     try:
         # compute path to cache
-        default_cache_path = appdirs.user_cache_dir("YoWASP", appauthor=False)
+        default_cache_path = platformdirs.user_cache_dir("YoWASP", appauthor=False)
         cache_path = pathlib.Path(os.environ.get("YOWASP_CACHE_DIR", default_cache_path))
-        cache_filename = (cache_path / __package__ / wasm_filename / module_digest)
+        cache_filename = cache_path / __package__ / wasm_filename / module_digest
 
         # compile WebAssembly to machine code, or load cached
         engine = wasmtime.Engine()
