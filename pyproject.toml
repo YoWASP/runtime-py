@@ -18,8 +18,8 @@ requires-python = "~=3.8"
 
 [project.urls]
 "Homepage" = "https://yowasp.org/"
-"Source Code" = "https://github.com/YoWASP/runtime"
-"Bug Tracker" = "https://github.com/YoWASP/runtime/issues"
+"Source Code" = "https://github.com/YoWASP/runtime-js"
+"Bug Tracker" = "https://github.com/YoWASP/runtime-js/issues"
 
 [tool.setuptools.dynamic]
 dependencies = {file = "dependencies.txt"}
