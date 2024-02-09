@@ -17,19 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '${{ matrix.python-version }}'
+          python-version: ${{ matrix.python-version }}
       - name: Run tests
         run: |
           ./tests/run.sh
   check: # group all `test (*)` workflows into one for the required status check
     needs: test
-    if: always() && !contains(needs.*.result, 'cancelled')
+    if: ${{ always() && !contains(needs.*.result, 'cancelled') }}
     runs-on: ubuntu-latest
     steps:
       - run: ${{ contains(needs.*.result, 'failure') && 'false' || 'true' }}
@@ -41,11 +41,11 @@ jobs:
       id-token: write
     steps:
     - name: Check out source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
     - name: Install dependencies
@@ -65,10 +65,10 @@ jobs:
   release:
     needs: check
     runs-on: ubuntu-latest
-    if: "contains(github.event.head_commit.message, 'autorelease') && github.event_name == 'push' && github.ref == 'refs/heads/develop'"
+    if: ${{ contains(github.event.head_commit.message, 'autorelease') && github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
     steps:
       - name: Check out source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.PUSH_TOKEN }}
           fetch-depth: 0 # fetch the release branch as well
