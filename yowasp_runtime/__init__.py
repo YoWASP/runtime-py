@@ -8,6 +8,7 @@ import hashlib
 import platformdirs
 import threading
 import signal
+import ctypes
 try:
     from importlib import resources as importlib_resources
     importlib_resources.files
@@ -57,8 +58,13 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
     else:
         # preopens for absolute paths
         if os.name == "nt":
-            for letter in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                wasi_cfg.preopen_dir(letter + ":\\", letter + ":")
+            drive_mask = ctypes.cdll.kernel32.GetLogicalDrives()
+            for drive_index in range(26):
+                if drive_mask & (1 << drive_index):
+                    drive_letter = "abcdefghijklmnopqrstuvwxyz"[drive_index]
+                    wasi_cfg.preopen_dir(drive_letter + ":\\", drive_letter + ":")
+                    drive_letter = drive_letter.upper()
+                    wasi_cfg.preopen_dir(drive_letter + ":\\", drive_letter + ":")
         else:
             # can't do this for files, but no one's going to use yowasp on files in / anyway
             for path in os.listdir("/"):
@@ -74,7 +80,7 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
     # preopens for package resources; these are necessary for package functionality
     # and take priority over implicit or explicit OS mounts
     for resource in resources:
-        wasi_cfg.preopen_dir(str(importlib_resources.files(__package__) / resource), 
+        wasi_cfg.preopen_dir(str(importlib_resources.files(__package__) / resource),
                              "/" + resource)
 
     # preopen for temporary directory; this is necessary for package functionality
