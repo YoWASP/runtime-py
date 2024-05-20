@@ -68,7 +68,7 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
         else:
             # can't do this for files, but no one's going to use yowasp on files in / anyway
             for path in os.listdir("/"):
-                if os.path.isdir("/" + path):
+                if os.path.isdir("/" + path) and os.access("/" + path, os.R_OK):
                     wasi_cfg.preopen_dir("/" + path, "/" + path)
 
         # preopens for relative paths
