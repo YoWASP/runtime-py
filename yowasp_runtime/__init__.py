@@ -72,8 +72,12 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
         else:
             # can't do this for files, but no one's going to use yowasp on files in / anyway
             for path in os.listdir("/"):
-                if os.path.isdir("/" + path) and os.access("/" + path, os.R_OK):
-                    wasi_cfg.preopen_dir("/" + path, "/" + path)
+                if os.path.isdir("/" + path):
+                    try:
+                        wasi_cfg.preopen_dir("/" + path, "/" + path)
+                    except wasmtime.WasmtimeError:
+                        # root subdirectory present, but not accessible (permission issue?); ignore
+                        continue
 
         # preopens for relative paths
         wasi_cfg.preopen_dir(".", ".")
