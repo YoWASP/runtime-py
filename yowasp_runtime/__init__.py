@@ -62,9 +62,13 @@ def run_wasm(__package__, wasm_filename, *, resources=[], argv):
             for drive_index in range(26):
                 if drive_mask & (1 << drive_index):
                     drive_letter = "abcdefghijklmnopqrstuvwxyz"[drive_index]
-                    wasi_cfg.preopen_dir(drive_letter + ":\\", drive_letter + ":")
-                    drive_letter = drive_letter.upper()
-                    wasi_cfg.preopen_dir(drive_letter + ":\\", drive_letter + ":")
+                    try:
+                        wasi_cfg.preopen_dir(drive_letter + ":\\", drive_letter + ":")
+                        drive_letter = drive_letter.upper()
+                        wasi_cfg.preopen_dir(drive_letter + ":\\", drive_letter + ":")
+                    except wasmtime.WasmtimeError:
+                        # drive letter present, but not accessible for some reason; ignore it
+                        continue
         else:
             # can't do this for files, but no one's going to use yowasp on files in / anyway
             for path in os.listdir("/"):
