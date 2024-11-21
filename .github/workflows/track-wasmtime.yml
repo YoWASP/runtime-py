@@ -27,7 +27,7 @@ jobs:
           ./tests/run.sh
       - name: Push updated version requirement
         if: steps.track-version.outputs.status == 'stale'
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: |
             [autorelease] Update wasmtime version requirement from ${{ steps.track-version.outputs.old-requirement }} to ${{ steps.track-version.outputs.new-requirement }}.
