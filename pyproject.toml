@@ -9,10 +9,7 @@ name = "yowasp-runtime"
 description = "Common runtime for YoWASP packages"
 readme = "README.md"
 authors = [{name = "Catherine", email = "whitequark@whitequark.org"}]
-license = {file = "LICENSE.txt"}
-classifiers = [
-	"License :: OSI Approved :: ISC License (ISCL)"
-]
+license = "ISC"
 
 requires-python = "~=3.8"
 
